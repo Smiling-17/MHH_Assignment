@@ -1,0 +1,20 @@
+# Bỏ qua thư mục build
+build/
+cmake-build-debug/
+.cache/
+.vscode/
+.idea/
+*.user
+
+# Bỏ qua file thực thi và file tạm
+bin/
+*.exe
+*.out
+*.o
+*.log
+
+# Bỏ qua file kết quả (giữ lại file mẫu nếu cần)
+output/*.png
+output/*.dot
+output/*.txt
+!output/.gitkeep
