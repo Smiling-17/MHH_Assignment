@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 8: Producer-Consumer with bounded buffer (size 1) -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="prodcons" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Producer states -->
+      <place id="p_ready"><initialMarking><text>1</text></initialMarking></place>
+      <place id="p_produced"></place>
+      <!-- Consumer states -->
+      <place id="c_ready"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c_consumed"></place>
+      <!-- Buffer -->
+      <place id="buffer"></place>
+      <place id="empty"><initialMarking><text>1</text></initialMarking></place>
+      
+      <transition id="produce"></transition>
+      <transition id="consume"></transition>
+      <transition id="reset_p"></transition>
+      <transition id="reset_c"></transition>
+      
+      <!-- Produce: p_ready + empty -> p_produced + buffer -->
+      <arc id="a1" source="p_ready" target="produce"/>
+      <arc id="a2" source="empty" target="produce"/>
+      <arc id="a3" source="produce" target="p_produced"/>
+      <arc id="a4" source="produce" target="buffer"/>
+      
+      <!-- Consume: c_ready + buffer -> c_consumed + empty -->
+      <arc id="a5" source="c_ready" target="consume"/>
+      <arc id="a6" source="buffer" target="consume"/>
+      <arc id="a7" source="consume" target="c_consumed"/>
+      <arc id="a8" source="consume" target="empty"/>
+      
+      <!-- Reset producer -->
+      <arc id="a9" source="p_produced" target="reset_p"/>
+      <arc id="a10" source="reset_p" target="p_ready"/>
+      
+      <!-- Reset consumer -->
+      <arc id="a11" source="c_consumed" target="reset_c"/>
+      <arc id="a12" source="reset_c" target="c_ready"/>
+    </page>
+  </net>
+</pnml>
+

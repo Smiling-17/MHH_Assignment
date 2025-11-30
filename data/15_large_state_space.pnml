@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 15: Large State Space - 4 independent 2-state cycles = 2^4 = 16 states -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="large16" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Component 1 -->
+      <place id="c1_a"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c1_b"></place>
+      <transition id="c1_ab"></transition>
+      <transition id="c1_ba"></transition>
+      <arc source="c1_a" target="c1_ab"/><arc source="c1_ab" target="c1_b"/>
+      <arc source="c1_b" target="c1_ba"/><arc source="c1_ba" target="c1_a"/>
+      
+      <!-- Component 2 -->
+      <place id="c2_a"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c2_b"></place>
+      <transition id="c2_ab"></transition>
+      <transition id="c2_ba"></transition>
+      <arc source="c2_a" target="c2_ab"/><arc source="c2_ab" target="c2_b"/>
+      <arc source="c2_b" target="c2_ba"/><arc source="c2_ba" target="c2_a"/>
+      
+      <!-- Component 3 -->
+      <place id="c3_a"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c3_b"></place>
+      <transition id="c3_ab"></transition>
+      <transition id="c3_ba"></transition>
+      <arc source="c3_a" target="c3_ab"/><arc source="c3_ab" target="c3_b"/>
+      <arc source="c3_b" target="c3_ba"/><arc source="c3_ba" target="c3_a"/>
+      
+      <!-- Component 4 -->
+      <place id="c4_a"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c4_b"></place>
+      <transition id="c4_ab"></transition>
+      <transition id="c4_ba"></transition>
+      <arc source="c4_a" target="c4_ab"/><arc source="c4_ab" target="c4_b"/>
+      <arc source="c4_b" target="c4_ba"/><arc source="c4_ba" target="c4_a"/>
+    </page>
+  </net>
+</pnml>
+

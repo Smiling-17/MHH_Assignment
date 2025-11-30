@@ -1,6 +1,11 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/*
+ * utils.h - Shared data structures & utilities for Petri Net Solver
+ * Contains: Model struct, Marking type, helper functions (isEnabled, fire, etc.)
+ */
+
 #include <vector>
 #include <string>
 #include <sstream>
@@ -11,23 +16,17 @@
 #include <chrono>
 #include <cstdint>
 
-// [FIX] Thêm thư viện này để dùng sysconf trên Linux/Mac
 #ifdef __linux__
 #include <unistd.h> 
 #endif
 
 using namespace std;
 
-// ============================================================
-//  File: utils.h
-//  Mô tả: Định nghĩa cấu trúc dữ liệu và hàm tiện ích dùng chung
-// ============================================================
+// Basic types for 1-safe Petri nets
+using Token = uint8_t;      // 0 or 1 token per place
+using Marking = vector<Token>;
 
-// ======== 1️⃣ Kiểu dữ liệu cơ bản ========
-using Token = uint8_t;                  
-using Marking = vector<Token>;          
-
-// ======== 2️⃣ Cấu trúc Model ========
+// Petri Net model structure
 struct Model {
     vector<string> places;
     vector<string> transitions;
@@ -40,8 +39,7 @@ struct Model {
     size_t arcCount = 0; 
 };
 
-// ======== 3️⃣ Kết quả trung gian của các module ========
-
+// Result structures for each module
 struct ReachResult {
     size_t states = 0;
     double timeSec = 0.0;
@@ -54,23 +52,19 @@ struct BddResult {
     double memMB = 0.0;
     int nodeCount = 0;
     int iters = 0;
-
-    // [FIX] Thêm con trỏ này để truyền dữ liệu sang ILP mà không lộ type thư viện
-    // Khoa sẽ gán pointer của bdd_manager hoặc ddd node vào đây
-    void* internalState = nullptr; 
+    void* internalState = nullptr;  // Stores BDD root for ILP reachability checks
 };
 
 struct IlpResult {
     bool hasDeadlock = false;
-    bool isReachable = false; // [FIX] Bổ sung flag: Deadlock này có reachable không?
+    bool isReachable = false;
     Marking deadlockMarking;
     Marking optMarking;
     double optObj = 0.0;
     double timeSec = 0.0;
 };
 
-// ======== 4️⃣ Hàm tiện ích cho Marking ========
-
+// Marking comparison & hashing
 inline bool operator==(const Marking& a, const Marking& b) {
     return a.size() == b.size() && equal(a.begin(), a.end(), b.begin());
 }
@@ -95,8 +89,7 @@ inline string toString(const Marking& M) {
     return oss.str();
 }
 
-// ======== 5️⃣ Hàm logic của Petri Net ========
-
+// Check if transition t is enabled at marking M
 inline bool isEnabled(const Model& net, const Marking& M, int t) {
     for (size_t p = 0; p < net.places.size(); ++p) {
         if (M[p] < net.Pre[p][t]) return false; 
@@ -104,6 +97,7 @@ inline bool isEnabled(const Model& net, const Marking& M, int t) {
     return true;
 }
 
+// Fire transition t: M' = M - Pre[t] + Post[t]
 inline Marking fire(const Model& net, const Marking& M, int t) {
     Marking M2 = M; // Copy ra marking mới
     for (size_t p = 0; p < net.places.size(); ++p) {
@@ -112,8 +106,7 @@ inline Marking fire(const Model& net, const Marking& M, int t) {
     return M2;
 }
 
-// ======== 6️⃣ Hàm thống kê bộ nhớ và thời gian ========
-
+// Memory usage (Linux only, returns 0 on Windows)
 inline double getMemoryMB() {
     #ifdef __linux__
         long rss = 0L;

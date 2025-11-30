@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 2: Simple Deadlock - Token moves to p1, no way out -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="deadlock_simple" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <place id="p0"><initialMarking><text>1</text></initialMarking></place>
+      <place id="p1"></place>
+      <transition id="t0"></transition>
+      <!-- p0 -> t0 -> p1, then stuck (deadlock at p1) -->
+      <arc id="a1" source="p0" target="t0"/>
+      <arc id="a2" source="t0" target="p1"/>
+    </page>
+  </net>
+</pnml>
+

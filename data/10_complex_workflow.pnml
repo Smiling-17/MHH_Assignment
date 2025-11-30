@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 10: Complex Workflow - Multiple paths, sync points -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="workflow" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Main flow -->
+      <place id="start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="task_a"></place>
+      <place id="task_b"></place>
+      <place id="task_c"></place>
+      <place id="sync1"></place>
+      <place id="sync2"></place>
+      <place id="task_d"></place>
+      <place id="task_e"></place>
+      <place id="merge"></place>
+      <place id="finish"></place>
+      
+      <transition id="begin"></transition>
+      <transition id="do_a"></transition>
+      <transition id="do_b"></transition>
+      <transition id="do_c"></transition>
+      <transition id="sync_ab"></transition>
+      <transition id="do_d"></transition>
+      <transition id="do_e"></transition>
+      <transition id="merge_de"></transition>
+      <transition id="complete"></transition>
+      
+      <!-- Start -> Fork to A and B -->
+      <arc id="a1" source="start" target="begin"/>
+      <arc id="a2" source="begin" target="task_a"/>
+      <arc id="a3" source="begin" target="task_b"/>
+      
+      <!-- A -> sync1, B -> sync1, sync -> C -->
+      <arc id="a4" source="task_a" target="do_a"/>
+      <arc id="a5" source="do_a" target="sync1"/>
+      <arc id="a6" source="task_b" target="do_b"/>
+      <arc id="a7" source="do_b" target="sync2"/>
+      
+      <arc id="a8" source="sync1" target="sync_ab"/>
+      <arc id="a9" source="sync2" target="sync_ab"/>
+      <arc id="a10" source="sync_ab" target="task_c"/>
+      
+      <!-- C -> Fork to D and E -->
+      <arc id="a11" source="task_c" target="do_c"/>
+      <arc id="a12" source="do_c" target="task_d"/>
+      <arc id="a13" source="do_c" target="task_e"/>
+      
+      <!-- D, E -> Merge -> Finish -->
+      <arc id="a14" source="task_d" target="do_d"/>
+      <arc id="a15" source="do_d" target="merge"/>
+      <arc id="a16" source="task_e" target="do_e"/>
+      <arc id="a17" source="do_e" target="merge"/>
+      
+      <arc id="a18" source="merge" target="merge_de"/>
+      <arc id="a19" source="merge" target="merge_de"/>
+      <arc id="a20" source="merge_de" target="finish"/>
+    </page>
+  </net>
+</pnml>
+

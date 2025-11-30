@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 13: Token Ring (4 nodes) -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="ring4" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <place id="node0"><initialMarking><text>1</text></initialMarking></place>
+      <place id="node1"></place>
+      <place id="node2"></place>
+      <place id="node3"></place>
+      
+      <transition id="pass_0_1"></transition>
+      <transition id="pass_1_2"></transition>
+      <transition id="pass_2_3"></transition>
+      <transition id="pass_3_0"></transition>
+      
+      <!-- Token passes: 0 -> 1 -> 2 -> 3 -> 0 -->
+      <arc id="a1" source="node0" target="pass_0_1"/>
+      <arc id="a2" source="pass_0_1" target="node1"/>
+      <arc id="a3" source="node1" target="pass_1_2"/>
+      <arc id="a4" source="pass_1_2" target="node2"/>
+      <arc id="a5" source="node2" target="pass_2_3"/>
+      <arc id="a6" source="pass_2_3" target="node3"/>
+      <arc id="a7" source="node3" target="pass_3_0"/>
+      <arc id="a8" source="pass_3_0" target="node0"/>
+    </page>
+  </net>
+</pnml>
+

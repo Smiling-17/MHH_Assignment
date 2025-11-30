@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 7: Dining Philosophers (2 philosophers) - Classic deadlock problem -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="dining2" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Philosophers thinking -->
+      <place id="think1"><initialMarking><text>1</text></initialMarking></place>
+      <place id="think2"><initialMarking><text>1</text></initialMarking></place>
+      <!-- Philosophers eating -->
+      <place id="eat1"></place>
+      <place id="eat2"></place>
+      <!-- Forks (shared resources) -->
+      <place id="fork1"><initialMarking><text>1</text></initialMarking></place>
+      <place id="fork2"><initialMarking><text>1</text></initialMarking></place>
+      
+      <transition id="pickup1"></transition>
+      <transition id="putdown1"></transition>
+      <transition id="pickup2"></transition>
+      <transition id="putdown2"></transition>
+      
+      <!-- Phil 1: needs fork1 and fork2 to eat -->
+      <arc id="a1" source="think1" target="pickup1"/>
+      <arc id="a2" source="fork1" target="pickup1"/>
+      <arc id="a3" source="fork2" target="pickup1"/>
+      <arc id="a4" source="pickup1" target="eat1"/>
+      <arc id="a5" source="eat1" target="putdown1"/>
+      <arc id="a6" source="putdown1" target="think1"/>
+      <arc id="a7" source="putdown1" target="fork1"/>
+      <arc id="a8" source="putdown1" target="fork2"/>
+      
+      <!-- Phil 2: needs fork2 and fork1 to eat -->
+      <arc id="a9" source="think2" target="pickup2"/>
+      <arc id="a10" source="fork2" target="pickup2"/>
+      <arc id="a11" source="fork1" target="pickup2"/>
+      <arc id="a12" source="pickup2" target="eat2"/>
+      <arc id="a13" source="eat2" target="putdown2"/>
+      <arc id="a14" source="putdown2" target="think2"/>
+      <arc id="a15" source="putdown2" target="fork2"/>
+      <arc id="a16" source="putdown2" target="fork1"/>
+    </page>
+  </net>
+</pnml>
+

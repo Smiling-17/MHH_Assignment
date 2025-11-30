@@ -1,3 +1,9 @@
+/*
+ * main.cpp - Petri Net Solver CLI
+ * Integrates all modules: Parser, Explicit, BDD, ILP
+ * Usage: ./petri_solver --input <file.pnml> --mode <all|explicit|bdd> [--optimize]
+ */
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,7 +12,6 @@
 #include <iomanip>
 #include <cstdlib>
 
-// Cross-platform directory creation
 #ifdef _WIN32
     #include <direct.h>
     #define MKDIR(dir) _mkdir(dir)
@@ -15,20 +20,18 @@
     #define MKDIR(dir) mkdir(dir, 0755)
 #endif
 
-// Include file tiện ích chung
 #include "utils.h"
+#include "parser.h"
+#include "reachability.h"
+#include "bdd.h"
 
-// Include header của các thành viên (Giả định các file này đã có)
-#include "parser.h"       
-#include "reachability.h" 
-#include "bdd.h"          
-#include "ilp.h"         
+#ifdef HAS_GLPK
+    #include "ilp.h"
+#endif
 
 using namespace std;
 
-// Hàm tạo thư mục cross-platform
 void createDirectory(const string& path) {
-    // Loại bỏ dấu / cuối nếu có
     string dir = path;
     if (!dir.empty() && (dir.back() == '/' || dir.back() == '\\')) {
         dir.pop_back();
@@ -38,7 +41,6 @@ void createDirectory(const string& path) {
     }
 }
 
-// Hàm in hướng dẫn sử dụng (Help)
 void printUsage() {
     cout << "Usage: ./petri_solver --input <file.pnml> [options]\n";
     cout << "Options:\n";
@@ -52,9 +54,7 @@ void printUsage() {
 }
 
 int main(int argc, char* argv[]) {
-    // --------------------------------------------------------
-    // 1. XỬ LÝ THAM SỐ DÒNG LỆNH (CLI Parsing)
-    // --------------------------------------------------------
+    // Parse CLI arguments
     string inputFile;
     string mode = "all";
     string outDir = "output/";
@@ -81,162 +81,111 @@ int main(int argc, char* argv[]) {
     }
 
     if (inputFile.empty()) {
-        cerr << "[ERROR] Missing input file! Please use --input.\n";
+        cerr << "[ERROR] Missing input file! Use --input.\n";
         return 1;
     }
 
-    // Đảm bảo thư mục output tồn tại (cross-platform)
     createDirectory(outDir);
 
-    // 2. CHUẨN BỊ FILE CSV (result.csv)
-    // Format chuẩn: Model,Method,States,TimeSec,MemMB,Deadlock,OptObj,OptMarking
+    // Prepare CSV output
     string csvPath = outDir + "result.csv";
     bool fileExists = false;
     ifstream checkFile(csvPath);
     if (checkFile.good()) fileExists = true;
     checkFile.close();
 
-    ofstream csvFile(csvPath, ios::app); // Mở chế độ append (ghi nối tiếp)
+    ofstream csvFile(csvPath, ios::app);
     if (!csvFile.is_open()) {
-        cerr << "[ERROR] Cannot open " << csvPath << " for writing.\n";
+        cerr << "[ERROR] Cannot open " << csvPath << "\n";
         return 1;
     }
 
-    // Ghi header nếu file mới tạo 
-    if (!fileExists) {
+    if (!fileExists)
         csvFile << "Model,Method,States,TimeSec,MemMB,Deadlock,OptObj,OptMarking\n";
-    }
 
-    // Lấy tên file model ngắn gọn để ghi log
     string modelName = inputFile.substr(inputFile.find_last_of("/\\") + 1);
 
     try {
-        // TASK 1: PARSE PNML 
+        // Task 1: Parse PNML
         cout << "[INFO] Parsing PNML: " << inputFile << "..." << endl;
-        
-        Model model = parsePNML(inputFile);
-        
+        Model model = parsePNML(inputFile, true, outDir + "petri_net.dot");
         cout << "[INFO] Parsed successfully. Places: " << model.places.size() 
              << ", Transitions: " << model.transitions.size() << endl;
 
-
-        // TASK 2: EXPLICIT REACHABILITY
+        // Task 2: Explicit Reachability
         if (mode == "explicit" || mode == "all") {
             cout << "[INFO] Task 2: Running Explicit Reachability (BFS/DFS)..." << endl;
-            
-            ReachOptions reachOpts; // Struct rỗng hoặc thêm tùy chọn nếu cần
+            ReachOptions reachOpts;
             ReachResult res = explicitReach(model, reachOpts);
-            
-            cout << "       -> States: " << res.states 
-                 << ", Time: " << res.timeSec << "s" 
-                 << ", Mem: " << res.memMB << "MB" << endl;
-            
-            // Ghi kết quả vào CSV (Các cột Deadlock/Opt để N/A)
+            cout << "       -> States: " << res.states << ", Time: " << res.timeSec << "s" << endl;
             csvFile << modelName << ",Explicit," << res.states << "," 
                     << res.timeSec << "," << res.memMB << ",N/A,N/A,N/A\n";
         }
 
-
-        // TASK 3: SYMBOLIC REACHABILITY - BDD 
-        BddResult bddRes; // Biến này lưu kết quả BDD để dùng cho Task 4
-        
-        // Nếu mode là explicit thì bỏ qua, nhưng Task 4 cần BDD nên ta vẫn phải chạy
-        // hoặc báo lỗi nếu người dùng chỉ chọn Explicit mà đòi tìm Deadlock.
-        // Ở đây ta ưu tiên chạy nếu mode == bdd hoặc all.
-        
+        // Task 3: Symbolic Reachability (BDD)
+        BddResult bddRes;
         if (mode == "bdd" || mode == "all") {
             cout << "[INFO] Task 3: Running Symbolic Reachability (BDD)..." << endl;
-            
             BddOptions bddOpts;
             bddRes = bddReach(model, bddOpts);
-            
-            cout << "       -> States: " << bddRes.states 
-                 << ", Nodes: " << bddRes.nodeCount 
+            cout << "       -> States: " << bddRes.states << ", Nodes: " << bddRes.nodeCount 
                  << ", Time: " << bddRes.timeSec << "s" << endl;
-
-            // Ghi phần đầu vào CSV (Chưa xuống dòng vội để ghi tiếp Deadlock/Opt)
             csvFile << modelName << ",BDD," << bddRes.states << "," 
                     << bddRes.timeSec << "," << bddRes.memMB << ",";
-        } else {
-            // Nếu người dùng chỉ chạy Explicit, ta không có kết quả BDD để ghi CSV dòng này
-            // Nhưng để Task 4 chạy được, cần cảnh báo
-            cout << "[WARN] Skipping BDD. Deadlock detection might fail or be skipped.\n";
         }
 
 
-        // TASK 4: DEADLOCK DETECTION (ILP + BDD) 
-        // Chỉ chạy nếu đã có kết quả BDD (bddRes.states > 0 hoặc internalState != nullptr)
+        // Task 4 & 5: ILP-based analysis (requires GLPK)
+#ifdef HAS_GLPK
         if (mode == "bdd" || mode == "all") {
+            // Task 4: Deadlock Detection
             cout << "[INFO] Task 4: Detecting Deadlock (ILP + BDD)..." << endl;
-            
             IlpOptions ilpOpts;
             ilpOpts.mode = IlpMode::DEADLOCK;
-            
-            // Gọi hàm giải ILP, truyền vào kết quả BDD để kiểm tra reachability
             IlpResult deadlockRes = solveILP(model, bddRes, ilpOpts);
             
-            // Mở file output/deadlock.txt để ghi 
             ofstream dlFile(outDir + "deadlock.txt");
-            
             if (deadlockRes.hasDeadlock && deadlockRes.isReachable) {
                 cout << "       [FOUND] Deadlock at: " << toString(deadlockRes.deadlockMarking) << endl;
-                
-                // Ghi vào CSV: Deadlock = Yes
                 csvFile << "Yes,";
-                
-                // Ghi vào file text
-                dlFile << "Deadlock found: " << toString(deadlockRes.deadlockMarking) << endl;
+                dlFile << "Deadlock: " << toString(deadlockRes.deadlockMarking) << endl;
             } else {
                 cout << "       [NONE] No reachable deadlock found." << endl;
-                
-                // Ghi vào CSV: Deadlock = No
                 csvFile << "No,";
-                
-                // Ghi vào file text
                 dlFile << "None" << endl;
             }
             dlFile.close();
 
-
-            // TASK 5: OPTIMIZATION 
+            // Task 5: Optimization
             if (doOptimize) {
                 cout << "[INFO] Task 5: Optimizing Objective (Maximize c^T M)..." << endl;
-                
                 IlpOptions optOpts;
                 optOpts.mode = IlpMode::OPTIMIZATION;
-                // Mặc định trọng số là 1 cho tất cả place (c = [1,1,...])
-                optOpts.weights.assign(model.places.size(), 1); 
-                
+                optOpts.weights.assign(model.places.size(), 1);
                 IlpResult optRes = solveILP(model, bddRes, optOpts);
                 
-                // Mở file output/optimum.txt [cite: 156]
                 ofstream optFile(outDir + "optimum.txt");
-                
                 if (optRes.isReachable) {
                     cout << "       -> Max Value: " << optRes.optObj << endl;
-                    
-                    // Ghi CSV: OptObj, OptMarking (Xuống dòng kết thúc record)
                     csvFile << optRes.optObj << ",\"" << toString(optRes.optMarking) << "\"\n";
-                    
-                    // Ghi file text
-                    optFile << "Max Objective: " << optRes.optObj << "\n";
-                    optFile << "Marking: " << toString(optRes.optMarking) << "\n";
+                    optFile << "Max: " << optRes.optObj << ", Marking: " << toString(optRes.optMarking) << "\n";
                 } else {
-                    cout << "       [FAIL] Optimization failed or no reachable state." << endl;
                     csvFile << "N/A,N/A\n";
                     optFile << "None\n";
                 }
                 optFile.close();
             } else {
-                // Nếu không chạy Optimize thì điền N/A vào CSV cho đủ cột
                 csvFile << "N/A,N/A\n";
             }
-        } 
-
-        // Cleanup BDD memory
-        if (bddRes.internalState != nullptr) {
-            bdd_cleanup(bddRes);
         }
+#else
+        if (mode == "bdd" || mode == "all") {
+            cout << "[WARN] GLPK not available - Task 4 & 5 skipped" << endl;
+            csvFile << "N/A,N/A,N/A\n";
+        }
+#endif
+
+        if (bddRes.internalState) bdd_cleanup(bddRes);
 
     } catch (const exception& e) {
         cerr << "\n[FATAL ERROR] Exception occurred: " << e.what() << endl;

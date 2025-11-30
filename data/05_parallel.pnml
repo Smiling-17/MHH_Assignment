@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 5: Parallel/Fork - One token splits into two -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="parallel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <place id="start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="p1"></place>
+      <place id="p2"></place>
+      <place id="end"></place>
+      <transition id="fork"></transition>
+      <transition id="join"></transition>
+      <!-- Fork: start -> (p1, p2), Join: (p1, p2) -> end -->
+      <arc id="a1" source="start" target="fork"/>
+      <arc id="a2" source="fork" target="p1"/>
+      <arc id="a3" source="fork" target="p2"/>
+      <arc id="a4" source="p1" target="join"/>
+      <arc id="a5" source="p2" target="join"/>
+      <arc id="a6" source="join" target="end"/>
+    </page>
+  </net>
+</pnml>
+

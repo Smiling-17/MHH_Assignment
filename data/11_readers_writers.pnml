@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 11: Readers-Writers Problem (1 reader, 1 writer) -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="rw" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Reader states -->
+      <place id="r_idle"><initialMarking><text>1</text></initialMarking></place>
+      <place id="r_reading"></place>
+      <!-- Writer states -->
+      <place id="w_idle"><initialMarking><text>1</text></initialMarking></place>
+      <place id="w_writing"></place>
+      <!-- Resource lock -->
+      <place id="resource"><initialMarking><text>1</text></initialMarking></place>
+      
+      <transition id="r_start"></transition>
+      <transition id="r_end"></transition>
+      <transition id="w_start"></transition>
+      <transition id="w_end"></transition>
+      
+      <!-- Reader: r_idle + resource -> r_reading, r_reading -> r_idle + resource -->
+      <arc id="a1" source="r_idle" target="r_start"/>
+      <arc id="a2" source="resource" target="r_start"/>
+      <arc id="a3" source="r_start" target="r_reading"/>
+      <arc id="a4" source="r_reading" target="r_end"/>
+      <arc id="a5" source="r_end" target="r_idle"/>
+      <arc id="a6" source="r_end" target="resource"/>
+      
+      <!-- Writer: w_idle + resource -> w_writing, w_writing -> w_idle + resource -->
+      <arc id="a7" source="w_idle" target="w_start"/>
+      <arc id="a8" source="resource" target="w_start"/>
+      <arc id="a9" source="w_start" target="w_writing"/>
+      <arc id="a10" source="w_writing" target="w_end"/>
+      <arc id="a11" source="w_end" target="w_idle"/>
+      <arc id="a12" source="w_end" target="resource"/>
+    </page>
+  </net>
+</pnml>
+

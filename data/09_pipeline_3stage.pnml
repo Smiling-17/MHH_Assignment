@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 9: 3-Stage Pipeline -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="pipeline3" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Stages -->
+      <place id="input"><initialMarking><text>1</text></initialMarking></place>
+      <place id="stage1"></place>
+      <place id="stage2"></place>
+      <place id="stage3"></place>
+      <place id="output"></place>
+      
+      <!-- Stage ready tokens (resources) -->
+      <place id="s1_ready"><initialMarking><text>1</text></initialMarking></place>
+      <place id="s2_ready"><initialMarking><text>1</text></initialMarking></place>
+      <place id="s3_ready"><initialMarking><text>1</text></initialMarking></place>
+      
+      <transition id="enter_s1"></transition>
+      <transition id="enter_s2"></transition>
+      <transition id="enter_s3"></transition>
+      <transition id="finish"></transition>
+      
+      <!-- Pipeline flow -->
+      <arc id="a1" source="input" target="enter_s1"/>
+      <arc id="a2" source="s1_ready" target="enter_s1"/>
+      <arc id="a3" source="enter_s1" target="stage1"/>
+      
+      <arc id="a4" source="stage1" target="enter_s2"/>
+      <arc id="a5" source="s2_ready" target="enter_s2"/>
+      <arc id="a6" source="enter_s2" target="stage2"/>
+      <arc id="a7" source="enter_s2" target="s1_ready"/>
+      
+      <arc id="a8" source="stage2" target="enter_s3"/>
+      <arc id="a9" source="s3_ready" target="enter_s3"/>
+      <arc id="a10" source="enter_s3" target="stage3"/>
+      <arc id="a11" source="enter_s3" target="s2_ready"/>
+      
+      <arc id="a12" source="stage3" target="finish"/>
+      <arc id="a13" source="finish" target="output"/>
+      <arc id="a14" source="finish" target="s3_ready"/>
+    </page>
+  </net>
+</pnml>
+

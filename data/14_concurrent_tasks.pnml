@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 14: 3 Concurrent Independent Tasks -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="concurrent3" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Task A -->
+      <place id="a_start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="a_end"></place>
+      <!-- Task B -->
+      <place id="b_start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="b_end"></place>
+      <!-- Task C -->
+      <place id="c_start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="c_end"></place>
+      
+      <transition id="do_a"></transition>
+      <transition id="do_b"></transition>
+      <transition id="do_c"></transition>
+      
+      <arc id="a1" source="a_start" target="do_a"/>
+      <arc id="a2" source="do_a" target="a_end"/>
+      <arc id="a3" source="b_start" target="do_b"/>
+      <arc id="a4" source="do_b" target="b_end"/>
+      <arc id="a5" source="c_start" target="do_c"/>
+      <arc id="a6" source="do_c" target="c_end"/>
+    </page>
+  </net>
+</pnml>
+

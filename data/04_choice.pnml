@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 4: Non-deterministic Choice - Token can go left or right -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="choice" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <place id="start"><initialMarking><text>1</text></initialMarking></place>
+      <place id="left"></place>
+      <place id="right"></place>
+      <transition id="go_left"></transition>
+      <transition id="go_right"></transition>
+      <!-- Choice: start can go to left OR right -->
+      <arc id="a1" source="start" target="go_left"/>
+      <arc id="a2" source="go_left" target="left"/>
+      <arc id="a3" source="start" target="go_right"/>
+      <arc id="a4" source="go_right" target="right"/>
+    </page>
+  </net>
+</pnml>
+

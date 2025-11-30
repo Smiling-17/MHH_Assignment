@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 12: Finite State Machine - Traffic Light -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="traffic" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <place id="red"><initialMarking><text>1</text></initialMarking></place>
+      <place id="yellow"></place>
+      <place id="green"></place>
+      
+      <transition id="red_to_green"></transition>
+      <transition id="green_to_yellow"></transition>
+      <transition id="yellow_to_red"></transition>
+      
+      <!-- Red -> Green -> Yellow -> Red (cycle) -->
+      <arc id="a1" source="red" target="red_to_green"/>
+      <arc id="a2" source="red_to_green" target="green"/>
+      <arc id="a3" source="green" target="green_to_yellow"/>
+      <arc id="a4" source="green_to_yellow" target="yellow"/>
+      <arc id="a5" source="yellow" target="yellow_to_red"/>
+      <arc id="a6" source="yellow_to_red" target="red"/>
+    </page>
+  </net>
+</pnml>
+

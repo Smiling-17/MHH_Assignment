@@ -1,10 +1,12 @@
-// src/ilp.cpp (FIXED VERSION with proper BDD check + min-cardinality deadlock objective)
-// Author: Ngô Minh Khôi
-// Description: ILP-based Deadlock Detection & Optimization using GLPK + BDD checks
+/*
+ * ilp.cpp - ILP-based analysis using GLPK (Task 4 & 5)
+ * Task 4: Deadlock detection with cutting-plane refinement
+ * Task 5: Maximize linear objective over reachable markings
+ */
 
 #include "ilp.h"
 #include "utils.h"
-#include "bdd.h"  // Sử dụng BDD thật từ Task 3 (thay vì mock)
+#include "bdd.h"
 #include <glpk.h>
 #include <iostream>
 #include <chrono>
@@ -15,24 +17,20 @@
 
 using namespace std;
 
-// -------------------- Internal helpers --------------------
+// Check if no transition is enabled
 static bool isDeadlock(const Model& model, const Marking& M) {
     for (size_t t = 0; t < model.transitions.size(); ++t)
         if (isEnabled(model, M, (int)t)) return false;
     return true;
 }
 
-// Gọi hàm BDD thật để kiểm tra reachability (từ bdd.h)
-// numPlaces cần được truyền vào từ model
+// Wrapper for BDD reachability check
 static bool isReachableViaBDD(const BddResult& bddResult, const Marking& M, int numPlaces) {
-    if (bddResult.internalState == nullptr) {
-        cerr << "[WARN] BDD internal state is null, assuming reachable for testing\n";
-        return true;  // Fallback cho testing
-    }
+    if (!bddResult.internalState) return true;  // Fallback if no BDD
     return bdd_check_reachable(bddResult, M, numPlaces);
 }
 
-// -------------------- Deadlock detection (GLPK) --------------------
+// Task 4: Find reachable deadlock marking using ILP + BDD
 static IlpResult solveDeadlockILP(const Model& model,
                                   const BddResult& bddResult,
                                   const IlpOptions& options) {
@@ -204,10 +202,10 @@ static IlpResult solveDeadlockILP(const Model& model,
     return result;
 }
 
-// -------------------- Optimization (GLPK) --------------------
+// Task 5: Maximize c^T * M over reachable markings using ILP + BDD
 static IlpResult solveOptimizationILP(const Model& model,
-                                     const BddResult& bddResult,
-                                     const IlpOptions& options) {
+                                      const BddResult& bddResult,
+                                      const IlpOptions& options) {
     IlpResult result;
     auto t_start = chrono::high_resolution_clock::now();
 
@@ -338,13 +336,13 @@ static IlpResult solveOptimizationILP(const Model& model,
     return result;
 }
 
-// -------------------- Public entrypoint --------------------
+// Main entry point - dispatches to Task 4 or Task 5
 IlpResult solveILP(const Model& model,
-                  const BddResult& bddResult,
-                  const IlpOptions& options) {
-    if (options.mode == IlpMode::DEADLOCK) 
+                   const BddResult& bddResult,
+                   const IlpOptions& options) {
+    if (options.mode == IlpMode::DEADLOCK)
         return solveDeadlockILP(model, bddResult, options);
-    if (options.mode == IlpMode::OPTIMIZATION) 
+    if (options.mode == IlpMode::OPTIMIZATION)
         return solveOptimizationILP(model, bddResult, options);
     return IlpResult();
 }

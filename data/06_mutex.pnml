@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Case 6: Mutual Exclusion - Classic mutex with 2 processes -->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="mutex" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <page id="page1">
+      <!-- Process 1 -->
+      <place id="idle1"><initialMarking><text>1</text></initialMarking></place>
+      <place id="critical1"></place>
+      <!-- Process 2 -->
+      <place id="idle2"><initialMarking><text>1</text></initialMarking></place>
+      <place id="critical2"></place>
+      <!-- Mutex token -->
+      <place id="mutex"><initialMarking><text>1</text></initialMarking></place>
+      
+      <transition id="enter1"></transition>
+      <transition id="leave1"></transition>
+      <transition id="enter2"></transition>
+      <transition id="leave2"></transition>
+      
+      <!-- Process 1: idle1 + mutex -> critical1, critical1 -> idle1 + mutex -->
+      <arc id="a1" source="idle1" target="enter1"/>
+      <arc id="a2" source="mutex" target="enter1"/>
+      <arc id="a3" source="enter1" target="critical1"/>
+      <arc id="a4" source="critical1" target="leave1"/>
+      <arc id="a5" source="leave1" target="idle1"/>
+      <arc id="a6" source="leave1" target="mutex"/>
+      
+      <!-- Process 2: idle2 + mutex -> critical2, critical2 -> idle2 + mutex -->
+      <arc id="a7" source="idle2" target="enter2"/>
+      <arc id="a8" source="mutex" target="enter2"/>
+      <arc id="a9" source="enter2" target="critical2"/>
+      <arc id="a10" source="critical2" target="leave2"/>
+      <arc id="a11" source="leave2" target="idle2"/>
+      <arc id="a12" source="leave2" target="mutex"/>
+    </page>
+  </net>
+</pnml>
+
