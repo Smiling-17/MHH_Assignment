@@ -1,10 +1,3 @@
-// ============================================================
-//  File: src/main.cpp
-//  Người thực hiện: Nguyễn Tiến Dũng (Leader)
-//  Mô tả: Chương trình điều phối chính (Pipeline) cho Assignment
-//  Reference: Assignment_MHH.pdf & Chia việc BTL.docx
-// ============================================================
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -12,6 +5,15 @@
 #include <cstring>
 #include <iomanip>
 #include <cstdlib>
+
+// Cross-platform directory creation
+#ifdef _WIN32
+    #include <direct.h>
+    #define MKDIR(dir) _mkdir(dir)
+#else
+    #include <sys/stat.h>
+    #define MKDIR(dir) mkdir(dir, 0755)
+#endif
 
 // Include file tiện ích chung
 #include "utils.h"
@@ -23,6 +25,18 @@
 #include "ilp.h"         
 
 using namespace std;
+
+// Hàm tạo thư mục cross-platform
+void createDirectory(const string& path) {
+    // Loại bỏ dấu / cuối nếu có
+    string dir = path;
+    if (!dir.empty() && (dir.back() == '/' || dir.back() == '\\')) {
+        dir.pop_back();
+    }
+    if (!dir.empty()) {
+        MKDIR(dir.c_str());
+    }
+}
 
 // Hàm in hướng dẫn sử dụng (Help)
 void printUsage() {
@@ -71,10 +85,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Đảm bảo thư mục output tồn tại
-    string cmd = "mkdir -p " + outDir;
-    int ret = system(cmd.c_str());
-    (void)ret; // Tránh warning unused variable
+    // Đảm bảo thư mục output tồn tại (cross-platform)
+    createDirectory(outDir);
 
     // 2. CHUẨN BỊ FILE CSV (result.csv)
     // Format chuẩn: Model,Method,States,TimeSec,MemMB,Deadlock,OptObj,OptMarking
@@ -220,6 +232,11 @@ int main(int argc, char* argv[]) {
                 csvFile << "N/A,N/A\n";
             }
         } 
+
+        // Cleanup BDD memory
+        if (bddRes.internalState != nullptr) {
+            bdd_cleanup(bddRes);
+        }
 
     } catch (const exception& e) {
         cerr << "\n[FATAL ERROR] Exception occurred: " << e.what() << endl;

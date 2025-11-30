@@ -36,6 +36,8 @@ struct Model {
     Marking M0;
     unordered_map<string, int> placeIndex;
     unordered_map<string, int> transIndex;
+
+    size_t arcCount = 0; 
 };
 
 // ======== 3️⃣ Kết quả trung gian của các module ========

@@ -42,10 +42,28 @@ int main() {
     
     // Quan trọng: Phải trả về con trỏ BDD để ILP dùng
     if (res.internalState == nullptr) {
-        cerr << "❌ [FAIL] BDD Result chưa có internalState (null)!" << endl;
+        cerr << "❌ [FAIL] BDD Result chua co internalState (null)!" << endl;
         return 1;
     }
 
-    cout << "✅ [PASS] BDD Symbolic hoạt động đúng!" << endl;
+    // Test hàm bdd_check_reachable
+    cout << "Testing bdd_check_reachable..." << endl;
+    
+    Marking m0 = {1, 0, 0, 0};  // Initial - should be reachable
+    Marking m1 = {0, 1, 1, 0};  // After t0 - should be reachable
+    Marking m2 = {0, 0, 0, 1};  // After t1 - should be reachable
+    Marking m3 = {1, 1, 0, 0};  // Not reachable
+    
+    assert(bdd_check_reachable(res, m0, 4) == true);
+    assert(bdd_check_reachable(res, m1, 4) == true);
+    assert(bdd_check_reachable(res, m2, 4) == true);
+    assert(bdd_check_reachable(res, m3, 4) == false);
+    
+    cout << "   -> bdd_check_reachable: OK" << endl;
+
+    // Cleanup
+    bdd_cleanup(res);
+
+    cout << "✅ [PASS] BDD Symbolic hoat dong dung!" << endl;
     return 0;
 }

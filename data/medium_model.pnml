@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Medium Petri Net - Producer-Consumer Model
+  6 places, 4 transitions
+  
+  Structure:
+    Producer side:        Consumer side:
+    p_ready (1 token)     c_ready (1 token)
+        |                      |
+       produce               consume
+        |                      |
+    p_done                  c_done
+        \                    /
+         \                  /
+          --> buffer (0) <--
+               |
+         (shared resource)
+  
+  Reachable states: ~6-8 states
+  Has potential deadlock depending on order
+-->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="medium_net" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <name><text>Producer-Consumer Model</text></name>
+    <page id="page1">
+      <!-- Producer places -->
+      <place id="p_ready">
+        <name><text>Producer Ready</text></name>
+        <initialMarking><text>1</text></initialMarking>
+      </place>
+      <place id="p_done">
+        <name><text>Producer Done</text></name>
+      </place>
+      
+      <!-- Consumer places -->
+      <place id="c_ready">
+        <name><text>Consumer Ready</text></name>
+        <initialMarking><text>1</text></initialMarking>
+      </place>
+      <place id="c_done">
+        <name><text>Consumer Done</text></name>
+      </place>
+      
+      <!-- Shared buffer -->
+      <place id="buffer">
+        <name><text>Buffer</text></name>
+      </place>
+      
+      <!-- Empty slot for buffer -->
+      <place id="empty">
+        <name><text>Empty Slot</text></name>
+        <initialMarking><text>1</text></initialMarking>
+      </place>
+      
+      <!-- Transitions -->
+      <transition id="produce">
+        <name><text>Produce</text></name>
+      </transition>
+      <transition id="consume">
+        <name><text>Consume</text></name>
+      </transition>
+      <transition id="reset_producer">
+        <name><text>Reset Producer</text></name>
+      </transition>
+      <transition id="reset_consumer">
+        <name><text>Reset Consumer</text></name>
+      </transition>
+      
+      <!-- Producer flow -->
+      <arc id="a1" source="p_ready" target="produce"/>
+      <arc id="a2" source="empty" target="produce"/>
+      <arc id="a3" source="produce" target="p_done"/>
+      <arc id="a4" source="produce" target="buffer"/>
+      
+      <!-- Consumer flow -->
+      <arc id="a5" source="c_ready" target="consume"/>
+      <arc id="a6" source="buffer" target="consume"/>
+      <arc id="a7" source="consume" target="c_done"/>
+      <arc id="a8" source="consume" target="empty"/>
+      
+      <!-- Reset producer -->
+      <arc id="a9" source="p_done" target="reset_producer"/>
+      <arc id="a10" source="reset_producer" target="p_ready"/>
+      
+      <!-- Reset consumer -->
+      <arc id="a11" source="c_done" target="reset_consumer"/>
+      <arc id="a12" source="reset_consumer" target="c_ready"/>
+    </page>
+  </net>
+</pnml>
+

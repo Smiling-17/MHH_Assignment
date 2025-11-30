@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Simple Petri Net - Diamond Model
+  4 places, 2 transitions
+  
+  Structure:
+       p0 (1 token)
+        |
+       t0
+      /   \
+    p1     p2
+      \   /
+       t1
+        |
+       p3 (deadlock)
+  
+  Reachable states: 3
+  - [1,0,0,0] (initial)
+  - [0,1,1,0] (after t0)
+  - [0,0,0,1] (after t1 - DEADLOCK)
+-->
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="simple_net" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <name><text>Simple Diamond Model</text></name>
+    <page id="page1">
+      <!-- Places -->
+      <place id="p0">
+        <name><text>p0</text></name>
+        <initialMarking><text>1</text></initialMarking>
+      </place>
+      <place id="p1">
+        <name><text>p1</text></name>
+      </place>
+      <place id="p2">
+        <name><text>p2</text></name>
+      </place>
+      <place id="p3">
+        <name><text>p3</text></name>
+      </place>
+      
+      <!-- Transitions -->
+      <transition id="t0">
+        <name><text>t0</text></name>
+      </transition>
+      <transition id="t1">
+        <name><text>t1</text></name>
+      </transition>
+      
+      <!-- Arcs: t0 consumes from p0, produces to p1 and p2 -->
+      <arc id="a1" source="p0" target="t0">
+        <inscription><text>1</text></inscription>
+      </arc>
+      <arc id="a2" source="t0" target="p1">
+        <inscription><text>1</text></inscription>
+      </arc>
+      <arc id="a3" source="t0" target="p2">
+        <inscription><text>1</text></inscription>
+      </arc>
+      
+      <!-- Arcs: t1 consumes from p1 and p2, produces to p3 -->
+      <arc id="a4" source="p1" target="t1">
+        <inscription><text>1</text></inscription>
+      </arc>
+      <arc id="a5" source="p2" target="t1">
+        <inscription><text>1</text></inscription>
+      </arc>
+      <arc id="a6" source="t1" target="p3">
+        <inscription><text>1</text></inscription>
+      </arc>
+    </page>
+  </net>
+</pnml>
+
