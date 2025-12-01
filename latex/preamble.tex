@@ -1,0 +1,121 @@
+% ============================================================
+% PREAMBLE.TEX - Packages và cài đặt chung (Compact Version)
+% ============================================================
+
+% ----- Encoding và ngôn ngữ -----
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+
+% ----- Layout và margins (thu gọn) -----
+\usepackage[
+    top=2cm,
+    bottom=2cm,
+    left=2.5cm,
+    right=2cm
+]{geometry}
+
+% ----- Typography (giãn dòng 1.15) -----
+\usepackage{times}
+\usepackage{setspace}
+\setstretch{1.15}
+
+% ----- Toán học -----
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+
+% ----- Hình ảnh và đồ họa -----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\graphicspath{{../output/}{output/}{figures/}{./}}
+
+% ----- Bảng biểu -----
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+% ----- Code và algorithms -----
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+
+% ----- Hyperlinks -----
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+% ----- Captions (thu gọn) -----
+\usepackage{caption}
+\captionsetup{
+    font=small,
+    labelfont=bf,
+    skip=3pt
+}
+
+% ----- Headers và footers -----
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Mô hình hóa toán học}
+\fancyhead[R]{\small Group 90}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ----- Định nghĩa màu cho code -----
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+% ----- Cài đặt listings cho C++ (font nhỏ hơn) -----
+\lstdefinestyle{cppstyle}{
+    language=C++,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=4pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    framerule=0.4pt,
+    xleftmargin=12pt,
+    framexleftmargin=12pt
+}
+\lstset{style=cppstyle}
+
+% ----- Định nghĩa theorem environments -----
+\theoremstyle{definition}
+\newtheorem{definition}{Định nghĩa}[section]
+
+% ----- Custom commands -----
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\marking}[1]{\mathbf{#1}}
+\newcommand{\pre}{\text{Pre}}
+\newcommand{\post}{\text{Post}}
+\newcommand{\reach}{\text{Reach}}
+
+% ----- Paragraph indent (thu gọn) -----
+\setlength{\parindent}{0.8cm}
+\setlength{\parskip}{4pt}
+
+% ----- Thu gọn khoảng cách trong lists -----
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=2pt}
+
+% ----- Thu gọn khoảng cách section -----
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+\titlespacing*{\subsubsection}{0pt}{4pt}{2pt}

@@ -1,3 +1,5 @@
 Model,Method,States,TimeSec,MemMB,Deadlock,OptObj,OptMarking
-01_minimal.pnml,Explicit,2,1.41e-05,0,N/A,N/A,N/A
-01_minimal.pnml,BDD,2,0.0182604,0,N/A,N/A,N/A
+01_minimal.pnml,Explicit,2,1.67e-05,0,N/A,N/A,N/A
+01_minimal.pnml,BDD,2,0.0132184,0,N/A,N/A,N/A
+
+

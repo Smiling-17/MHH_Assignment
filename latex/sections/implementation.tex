@@ -1,0 +1,105 @@
+% ============================================================
+% IMPLEMENTATION.TEX - Thiết kế và triển khai
+% ============================================================
+
+\section{Thiết kế và triển khai}
+\label{sec:implementation}
+
+\subsection{Kiến trúc hệ thống}
+\label{subsec:architecture}
+
+Hệ thống được thiết kế theo kiến trúc \textbf{module hóa}, mỗi task được triển khai trong một module riêng biệt, chia sẻ cấu trúc dữ liệu chung. Kiến trúc gồm 4 tầng:
+
+\begin{enumerate}
+    \item \textbf{Tầng CLI} (\code{main.cpp}): Xử lý tham số dòng lệnh, điều phối các module
+    \item \textbf{Tầng Task}: \code{parser}, \code{reachability}, \code{bdd}, \code{ilp} -- mỗi file xử lý một nhiệm vụ
+    \item \textbf{Tầng Utilities} (\code{utils.h}): Cấu trúc dữ liệu và hàm tiện ích dùng chung
+    \item \textbf{Tầng Thư viện}: TinyXML2, BuDDy, GLPK
+\end{enumerate}
+
+\subsection{Cấu trúc dữ liệu}
+\label{subsec:data-structures}
+
+\subsubsection{Biểu diễn Marking}
+Với 1-safe Petri Net, mỗi place chứa 0 hoặc 1 token. Chúng tôi sử dụng kiểu \code{uint8\_t} (1 byte) thay vì \code{int} (4 bytes) để tiết kiệm bộ nhớ khi lưu trữ hàng triệu markings. Marking là một \code{vector<uint8\_t>} với mỗi phần tử tương ứng một place.
+
+\subsubsection{Cấu trúc Model}
+Struct \code{Model} lưu trữ toàn bộ thông tin Petri Net:
+\begin{itemize}
+    \item Danh sách tên places và transitions
+    \item Ma trận \code{Pre[p][t]} và \code{Post[p][t]} kích thước $|P| \times |T|$
+    \item Marking khởi đầu $\marking{M}_0$
+    \item Hash maps để tra cứu index từ tên trong $O(1)$
+\end{itemize}
+
+\subsubsection{Hash Function cho Marking}
+Để sử dụng \code{unordered\_set<Marking>} trong BFS/DFS, chúng tôi định nghĩa hàm hash theo phương pháp \textbf{polynomial rolling hash}: $h = \sum_i (h \times 131 + M[i])$. Hằng số 131 là số nguyên tố, giúp phân phối đều các giá trị hash và giảm collision.
+
+\subsection{Thư viện sử dụng}
+\label{subsec:libraries}
+
+\begin{table}[H]
+\centering
+\caption{Các thư viện bên ngoài}
+\label{tab:libraries}
+\begin{tabular}{|l|l|p{7cm}|}
+\hline
+\textbf{Thư viện} & \textbf{Mục đích} & \textbf{Cách sử dụng} \\
+\hline
+TinyXML2 & XML Parser & Đọc file PNML, duyệt các element \code{<place>}, \code{<transition>}, \code{<arc>} để xây dựng Model \\
+\hline
+BuDDy 2.4 & BDD Library & Tạo biến (\code{bdd\_ithvar}), tính image (\code{bdd\_relprod}), đổi tên biến (\code{bdd\_replace}), đếm states (\code{bdd\_satcountset}) \\
+\hline
+GLPK 5.0 & ILP Solver & Tạo bài toán (\code{glp\_create\_prob}), đặt biến binary (\code{GLP\_BV}), giải (\code{glp\_intopt}) \\
+\hline
+\end{tabular}
+\end{table}
+
+BuDDy được tích hợp trực tiếp vào project (folder \code{src/buddy/}) để đơn giản hóa build. GLPK là optional -- nếu không cài đặt, CMake sẽ disable Task 4 \& 5 thông qua macro \code{HAS\_GLPK}.
+
+\subsection{Triển khai từng Task}
+\label{subsec:task-impl}
+
+\subsubsection{Task 1: PNML Parser}
+Parser sử dụng TinyXML2 để đọc cấu trúc XML của file PNML. Quy trình:
+\begin{enumerate}
+    \item Mở file và parse XML document
+    \item Duyệt tất cả \code{<place>} elements, lưu ID và initial marking (nếu có)
+    \item Duyệt tất cả \code{<transition>} elements, lưu ID
+    \item Duyệt tất cả \code{<arc>} elements, xác định source/target để điền ma trận Pre hoặc Post
+    \item Export đồ thị Petri Net ra file DOT (GraphViz) để visualization
+\end{enumerate}
+
+\subsubsection{Task 2: Explicit Reachability}
+Triển khai hai thuật toán BFS và DFS với logic giống nhau, chỉ khác cấu trúc dữ liệu frontier:
+\begin{itemize}
+    \item \textbf{BFS}: Sử dụng \code{std::queue}, đảm bảo duyệt theo chiều rộng
+    \item \textbf{DFS}: Sử dụng \code{std::stack}, duyệt theo chiều sâu
+\end{itemize}
+
+Hàm \code{isEnabled()} kiểm tra điều kiện $\forall p: M[p] \geq \pre[p][t]$ bằng vòng lặp qua tất cả places. Hàm \code{fire()} tính marking mới theo công thức $M' = M - \pre + \post$.
+
+Sử dụng \code{unordered\_set<Marking, MarkingHash>} để lưu visited markings, đảm bảo kiểm tra membership trong $O(1)$ trung bình.
+
+\subsubsection{Task 3: Symbolic Reachability với BDD}
+\textbf{Encoding}: Với $n$ places, sử dụng $2n$ biến Boolean. Biến index chẵn ($x_0, x_2, \ldots$) biểu diễn current state, biến index lẻ ($x_1, x_3, \ldots$) biểu diễn next state. Cách encoding này cho phép xây dựng transition relation $TR(x, x')$.
+
+\textbf{Transition Relation}: Với mỗi transition $t$, encode điều kiện enabled (các input places phải có token) và effect (thay đổi tokens). Transition relation tổng thể là OR của tất cả các transition relations đơn lẻ.
+
+\textbf{Fixpoint}: Bắt đầu từ $\marking{M}_0$, lặp tính image (các states đạt được trong 1 bước) bằng \code{bdd\_relprod()}, đổi tên biến next thành current bằng \code{bdd\_replace()}, cho đến khi không có state mới.
+
+\textbf{Lưu BDD cho ILP}: Sau khi tính xong, lưu BDD root ID vào \code{void* internalState} với reference counting (\code{bdd\_addref}) để module ILP có thể kiểm tra reachability.
+
+\subsubsection{Task 4 \& 5: ILP với GLPK}
+\textbf{Mô hình hóa}: Mỗi place $p$ là một biến binary $M[p] \in \{0,1\}$. Với deadlock detection, thêm ràng buộc cho mỗi transition $t$: tổng tokens ở input places phải nhỏ hơn yêu cầu (không đủ để fire).
+
+\textbf{Cutting-plane}: Vì ILP chỉ tìm marking thỏa ràng buộc mà không đảm bảo reachable, chúng tôi kiểm tra kết quả bằng BDD. Nếu marking không reachable, thêm constraint loại trừ chính xác marking đó và giải lại.
+
+\textbf{Tích hợp BDD}: Hàm \code{bdd\_check\_reachable()} nhận BddResult và marking, kiểm tra $\text{encode}(M) \wedge \text{Reached} \neq \text{false}$ để xác định reachability.
+
+\subsection{Build System}
+\label{subsec:build}
+
+Project sử dụng \textbf{CMake} để quản lý build, hỗ trợ cross-platform (Windows/Linux). CMake tự động detect thư viện TinyXML2 và GLPK. Nếu GLPK không tìm thấy, các task ILP được disable nhưng project vẫn build thành công.
+
+\textbf{Output}: Kết quả được xuất ra folder \code{output/} gồm: \code{result.csv} (bảng hiệu năng), \code{deadlock.txt}, \code{optimum.txt}, và \code{petri\_net.dot} (đồ thị visualization).

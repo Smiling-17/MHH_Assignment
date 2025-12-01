@@ -1,0 +1,68 @@
+% ============================================================
+% INTRODUCTION.TEX - Phần giới thiệu
+% ============================================================
+
+\section{Giới thiệu}
+\label{sec:introduction}
+
+\subsection{Tổng quan về Petri Nets}
+\label{subsec:petri-overview}
+
+Petri Net là mô hình toán học được giới thiệu bởi Carl Adam Petri (1962), sử dụng rộng rãi để mô hình hóa và phân tích các hệ thống phân tán, đồng thời và hướng sự kiện. Với khả năng biểu diễn trực quan các khái niệm như đồng bộ hóa, xung đột tài nguyên và tính song song, Petri Net đã trở thành công cụ quan trọng trong nhiều lĩnh vực.
+
+Một Petri Net bao gồm bốn thành phần chính:
+\begin{itemize}
+    \item \textbf{Places}: Biểu diễn điều kiện/trạng thái (ký hiệu hình tròn)
+    \item \textbf{Transitions}: Biểu diễn sự kiện/hành động (ký hiệu hình chữ nhật)
+    \item \textbf{Arcs}: Kết nối places với transitions, xác định luồng tokens
+    \item \textbf{Tokens}: Đánh dấu trong places, biểu diễn tài nguyên/trạng thái
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{petri_net_basic.png}
+    \caption{Ví dụ Petri Net với places ($p_0, p_1$), transitions ($t_1, t_2$) và tokens}
+    \label{fig:petri-example}
+\end{figure}
+
+\textbf{Marking} $\marking{M}$ là vector biểu diễn số tokens tại mỗi place. Transition \textbf{enabled} khi đủ tokens ở input places; khi \textbf{fire} sẽ di chuyển tokens theo arcs.
+
+\subsection{1-safe Petri Nets}
+\label{subsec:1safe}
+
+Trong bài tập này, chúng tôi tập trung vào \textbf{1-safe Petri Net} -- loại Petri Net mà mỗi place chứa tối đa 1 token ($M[p] \in \{0, 1\}$).
+
+Tính chất 1-safe mang lại ưu điểm:
+\begin{enumerate}
+    \item \textbf{Biểu diễn Boolean}: Phù hợp cho Binary Decision Diagrams (BDD)
+    \item \textbf{State space hữu hạn}: Tối đa $2^n$ markings với $n$ places
+    \item \textbf{Đơn giản hóa phân tích}: Các thuật toán có thể tối ưu dựa trên tính chất này
+\end{enumerate}
+
+\subsection{Mục tiêu bài tập lớn}
+\label{subsec:objectives}
+
+Bài tập yêu cầu triển khai hệ thống phân tích Petri Net hoàn chỉnh:
+
+\begin{table}[H]
+\centering
+\caption{Tổng quan các nhiệm vụ}
+\label{tab:tasks}
+\begin{tabular}{|c|p{10.5cm}|}
+\hline
+\textbf{Task} & \textbf{Mô tả} \\
+\hline
+1 & \textbf{PNML Parser}: Đọc file PNML (Petri Net Markup Language), xây dựng mô hình nội bộ \\
+\hline
+2 & \textbf{Explicit Reachability}: Tính tập reachable markings bằng BFS và DFS \\
+\hline
+3 & \textbf{Symbolic Reachability}: Dùng BDD để xử lý state space lớn hiệu quả \\
+\hline
+4 & \textbf{Deadlock Detection}: ILP + BDD tìm reachable marking không có transition enabled \\
+\hline
+5 & \textbf{Optimization}: Maximize $\mathbf{c}^T \cdot \marking{M}$ trên tập reachable markings \\
+\hline
+\end{tabular}
+\end{table}
+
+Mục tiêu tổng thể: xây dựng công cụ đọc mô hình PNML, so sánh hiệu năng explicit vs symbolic, phát hiện deadlock và tối ưu hóa trên không gian trạng thái.

@@ -1,0 +1,122 @@
+% ============================================================
+% RESULTS.TEX - Kết quả thực nghiệm
+% ============================================================
+
+\section{Kết quả thực nghiệm}
+\label{sec:results}
+
+\subsection{Mô hình test}
+\label{subsec:test-models}
+
+Bộ test gồm 15 file PNML với độ phức tạp tăng dần:
+
+\begin{table}[H]
+\centering
+\caption{Danh sách các mô hình test}
+\label{tab:test-models}
+\begin{tabular}{|c|l|l|}
+\hline
+\textbf{STT} & \textbf{Tên file} & \textbf{Mô tả} \\
+\hline
+1-5 & \code{01\_minimal} -- \code{05\_parallel} & Mô hình cơ bản \\
+\hline
+6-10 & \code{06\_mutex} -- \code{10\_workflow} & Bài toán đồng bộ \\
+\hline
+11-15 & \code{11\_readers\_writers} -- \code{15\_large} & Mô hình phức tạp \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{So sánh hiệu năng}
+\label{subsec:performance}
+
+\begin{table}[H]
+\centering
+\caption{So sánh Explicit (BFS/DFS) vs BDD}
+\label{tab:performance}
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\textbf{Model} & \textbf{States} & \textbf{BFS (s)} & \textbf{DFS (s)} & \textbf{BDD (s)} & \textbf{Nodes} \\
+\hline
+01\_minimal & 2 & 0.00002 & 0.00002 & 0.013 & 15 \\
+\hline
+02\_deadlock & 3 & -- & -- & -- & -- \\
+\hline
+05\_parallel & 8 & -- & -- & -- & -- \\
+\hline
+\multicolumn{6}{|c|}{\textit{(Cập nhật sau khi chạy đầy đủ test cases)}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{chart_performance_comparison.png}
+\caption{So sánh thời gian thực thi giữa các phương pháp}
+\label{fig:performance}
+\end{figure}
+
+\textbf{Phân tích}:
+\begin{enumerate}
+    \item \textbf{BDD overhead}: Với mô hình nhỏ ($<10$ states), BDD có overhead khởi tạo ($\sim$0.01s), explicit methods nhanh hơn.
+    \item \textbf{BDD scalable}: Khi state space tăng, BDD nén hiệu quả nhờ chia sẻ cấu trúc con.
+    \item \textbf{BFS = DFS về states}: Cả hai cho cùng số states (đúng lý thuyết), thời gian tương đương.
+\end{enumerate}
+
+\subsection{Kết quả ILP}
+\label{subsec:ilp-results}
+
+\begin{table}[H]
+\centering
+\caption{Kết quả Deadlock Detection (Task 4) và Optimization (Task 5)}
+\label{tab:ilp}
+\begin{tabular}{|l|c|l|r|l|}
+\hline
+\textbf{Model} & \textbf{Deadlock?} & \textbf{Dead. Marking} & \textbf{Max Obj} & \textbf{Opt. Marking} \\
+\hline
+simple\_test & Có & $[0,0,0,1]$ & 2 & $[0,1,1,0]$ \\
+\hline
+02\_deadlock & Có & -- & -- & -- \\
+\hline
+03\_loop & Không & -- & -- & -- \\
+\hline
+\multicolumn{5}{|c|}{\textit{(Cập nhật sau khi chạy đầy đủ với GLPK)}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Giải thích kết quả}:
+\begin{itemize}
+    \item \textbf{Deadlock} $[0,0,0,1]$: Chỉ $p_3$ có token, không transition nào enabled vì thiếu tokens ở input places.
+    \item \textbf{Optimal} $[0,1,1,0]$: Tối đa tổng tokens ($=2$) trong các reachable markings với $\mathbf{c} = [1,1,1,1]$.
+\end{itemize}
+
+\subsection{Dashboard tổng hợp}
+\label{subsec:dashboard}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{chart_dashboard.png}
+\caption{Dashboard tổng hợp: States, Time, BDD Nodes và phân tích ILP}
+\label{fig:dashboard}
+\end{figure}
+
+\subsection{Thảo luận}
+\label{subsec:discussion}
+
+\begin{table}[H]
+\centering
+\caption{So sánh ưu/nhược điểm các phương pháp}
+\label{tab:comparison}
+\begin{tabular}{|l|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{Phương pháp} & \textbf{Ưu điểm} & \textbf{Nhược điểm} \\
+\hline
+BFS/DFS & Đơn giản, dễ debug, liệt kê cụ thể & Tốn bộ nhớ khi $|\reach| > 10^6$ \\
+\hline
+BDD & Nén hiệu quả, xử lý $10^{10}+$ states & Overhead khởi tạo, phụ thuộc ordering \\
+\hline
+ILP+BDD & Tìm marking tối ưu, đảm bảo reachable & Cần GLPK, cutting-plane iterations \\
+\hline
+\end{tabular}
+\end{table}

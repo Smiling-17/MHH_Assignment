@@ -1,0 +1,52 @@
+% ============================================================
+% MAIN.TEX - File chính của báo cáo
+% Môn: Mô hình hóa toán học
+% Nhóm: Group 90
+% ============================================================
+
+\documentclass[12pt, a4paper]{article}
+
+% Load preamble (packages và settings)
+\input{preamble}
+
+\begin{document}
+
+% ============================================================
+% TRANG BÌA
+% ============================================================
+\input{sections/titlepage}
+
+% ============================================================
+% MỤC LỤC
+% ============================================================
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================
+% NỘI DUNG CHÍNH
+% ============================================================
+
+% 1. Giới thiệu
+\input{sections/introduction}
+
+% 2. Cơ sở lý thuyết
+\input{sections/theory}
+
+% 3. Thiết kế và triển khai
+\input{sections/implementation}
+
+% 4. Kết quả thực nghiệm
+\input{sections/results}
+
+% 5. Kết luận
+\input{sections/conclusion}
+
+% ============================================================
+% TÀI LIỆU THAM KHẢO
+% ============================================================
+\newpage
+\input{sections/references}
+
+\end{document}
+

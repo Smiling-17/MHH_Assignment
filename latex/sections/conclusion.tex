@@ -1,0 +1,71 @@
+% ============================================================
+% CONCLUSION.TEX - Kết luận
+% ============================================================
+
+\section{Kết luận}
+\label{sec:conclusion}
+
+\subsection{Tóm tắt kết quả}
+\label{subsec:summary}
+
+Chúng tôi đã triển khai thành công hệ thống phân tích Petri Net cho 1-safe nets:
+
+\begin{enumerate}
+    \item \textbf{Task 1 - PNML Parser}: Sử dụng thư viện \textbf{TinyXML2} để đọc file PNML theo chuẩn quốc tế, xây dựng cấu trúc \code{Model} với ma trận \code{Pre}, \code{Post} và marking khởi đầu $\marking{M}_0$.
+    
+    \item \textbf{Task 2 - Explicit Reachability}: Triển khai BFS (queue) và DFS (stack) với \code{unordered\_set<Marking>} dùng custom \code{MarkingHash}. Hàm \code{isEnabled()} và \code{fire()} implement đúng định nghĩa toán học.
+    
+    \item \textbf{Task 3 - Symbolic Reachability}: Sử dụng thư viện \textbf{BuDDy} để encode markings và transition relation. Thuật toán fixpoint với \code{bdd\_relprod()} (image computation) và \code{bdd\_replace()} (rename variables).
+    
+    \item \textbf{Task 4 - Deadlock Detection}: Mô hình ILP với \textbf{GLPK} tìm marking không có transition enabled. Ràng buộc: $\sum \pre[p][t] \cdot M[p] \leq \sum \pre[p][t] - 1$. Kết hợp BDD để verify reachability.
+    
+    \item \textbf{Task 5 - Optimization}: Maximize $\mathbf{c}^T \cdot \marking{M}$ với cutting-plane method, loại trừ candidates không reachable.
+\end{enumerate}
+
+Hệ thống được test trên 15 mô hình từ đơn giản đến phức tạp (Dining Philosophers, Producer-Consumer, Readers-Writers).
+
+\subsection{Khó khăn và giải pháp}
+\label{subsec:challenges}
+
+\begin{enumerate}
+    \item \textbf{Tích hợp BuDDy}: 
+    \begin{itemize}
+        \item Vấn đề: BuDDy có cả C API (\code{BDD} type) và C++ wrapper (\code{bdd} class)
+        \item Giải pháp: Lưu BDD root ID vào \code{void* internalState}, dùng \code{bdd\_addref/delref} quản lý memory
+    \end{itemize}
+    
+    \item \textbf{Cross-platform}: 
+    \begin{itemize}
+        \item Vấn đề: Memory measurement chỉ hoạt động trên Linux (\code{/proc/self/statm})
+        \item Giải pháp: Dùng \code{\#ifdef \_WIN32} cho conditional compilation
+    \end{itemize}
+    
+    \item \textbf{GLPK optional}: 
+    \begin{itemize}
+        \item Vấn đề: GLPK không có sẵn trên mọi hệ thống
+        \item Giải pháp: CMake detect GLPK, định nghĩa macro \code{HAS\_GLPK} để conditional compile
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Hướng phát triển}
+\label{subsec:future-work}
+
+\begin{itemize}
+    \item \textbf{Dynamic Variable Reordering}: Tích hợp \code{bdd\_reorder()} để tối ưu BDD size
+    \item \textbf{Parallel Reachability}: Song song hóa BFS/DFS với multi-threading
+    \item \textbf{State Equation Constraints}: Thêm vào ILP để tăng pruning power
+    \item \textbf{Symbolic Model Checking}: Mở rộng kiểm tra liveness, safety properties
+\end{itemize}
+
+\subsection{Kết luận chung}
+\label{subsec:final}
+
+Bài tập lớn giúp nhóm hiểu sâu về:
+\begin{itemize}
+    \item Lý thuyết Petri Net và ứng dụng trong mô hình hóa hệ thống đồng thời
+    \item Phương pháp explicit (BFS/DFS) và symbolic (BDD) cho reachability analysis
+    \item Kỹ thuật kết hợp ILP với BDD để giải bài toán tối ưu trên không gian trạng thái
+    \item Thực hành triển khai với thư viện TinyXML2, BuDDy, GLPK
+\end{itemize}
+
+Hệ thống có tính modular cao, dễ mở rộng, đáp ứng đầy đủ yêu cầu bài tập lớn.

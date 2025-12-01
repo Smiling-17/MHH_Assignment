@@ -1,0 +1,134 @@
+% ============================================================
+% THEORY.TEX - Cơ sở lý thuyết
+% ============================================================
+
+\section{Cơ sở lý thuyết}
+\label{sec:theory}
+
+\subsection{Định nghĩa hình thức}
+\label{subsec:formal-def}
+
+\begin{definition}[Petri Net]
+Một Petri Net là bộ năm $N = (P, T, \pre, \post, \marking{M}_0)$ trong đó:
+\begin{itemize}
+    \item $P = \{p_1, p_2, \ldots, p_n\}$: tập hữu hạn các places
+    \item $T = \{t_1, t_2, \ldots, t_m\}$: tập hữu hạn các transitions ($P \cap T = \emptyset$)
+    \item $\pre: P \times T \rightarrow \mathbb{N}$: ma trận input arcs (kích thước $n \times m$)
+    \item $\post: P \times T \rightarrow \mathbb{N}$: ma trận output arcs (kích thước $n \times m$)
+    \item $\marking{M}_0 \in \mathbb{N}^n$: marking khởi đầu
+\end{itemize}
+\end{definition}
+
+\textbf{Marking} $\marking{M}$ là vector $\marking{M} = (M[p_1], \ldots, M[p_n])$ biểu diễn số token tại mỗi place. Với \textbf{1-safe Petri Net}, $M[p] \in \{0, 1\}$ với mọi $p \in P$.
+
+\begin{definition}[Transition Enabled và Firing]
+Transition $t$ \textbf{enabled} tại $\marking{M}$ khi: $\forall p \in P: M[p] \geq \pre[p][t]$
+
+Khi fire $t$, marking mới: $\marking{M}' = \marking{M} - \pre[\cdot][t] + \post[\cdot][t]$
+\end{definition}
+
+\begin{definition}[Reachability]
+Tập reachable markings: $\reach(\marking{M}_0) = \{\marking{M}' \mid \exists t_1, \ldots, t_k: \marking{M}_0[t_1\rangle\marking{M}_1 \cdots [t_k\rangle\marking{M}'\}$
+\end{definition}
+
+\subsection{Explicit Reachability (BFS/DFS)}
+\label{subsec:explicit-reach}
+
+Phương pháp explicit duyệt đồ thị trạng thái để liệt kê tất cả reachable markings. Chúng tôi triển khai cả BFS (Breadth-First Search) và DFS (Depth-First Search):
+
+\begin{itemize}
+    \item \textbf{BFS}: Dùng hàng đợi (queue), duyệt theo chiều rộng, tìm đường ngắn nhất
+    \item \textbf{DFS}: Dùng ngăn xếp (stack), duyệt theo chiều sâu, tiết kiệm bộ nhớ
+\end{itemize}
+
+\begin{algorithm}[H]
+\caption{Explicit Reachability}
+\label{alg:explicit}
+\begin{algorithmic}[1]
+\Require Petri Net $N = (P, T, \pre, \post, \marking{M}_0)$
+\Ensure Tập $\reach(\marking{M}_0)$
+\State $visited \gets \{\marking{M}_0\}$ \Comment{Hash set với custom MarkingHash}
+\State $frontier \gets [\marking{M}_0]$ \Comment{Queue (BFS) hoặc Stack (DFS)}
+\While{$frontier \neq \emptyset$}
+    \State $\marking{M} \gets frontier.\text{dequeue/pop}()$
+    \For{mỗi transition $t \in T$}
+        \If{$\text{isEnabled}(\marking{M}, t)$} \Comment{Kiểm tra $M[p] \geq \pre[p][t]$}
+            \State $\marking{M}' \gets \text{fire}(\marking{M}, t)$ \Comment{$M' = M - \pre + \post$}
+            \If{$\marking{M}' \notin visited$}
+                \State $visited.\text{add}(\marking{M}')$
+                \State $frontier.\text{enqueue/push}(\marking{M}')$
+            \EndIf
+        \EndIf
+    \EndFor
+\EndWhile
+\State \Return $visited$
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Độ phức tạp}: $O(|\reach(\marking{M}_0)| \times |T|)$ về thời gian. Sử dụng \code{unordered\_set<Marking>} với hash function polynomial rolling ($h = h \times 131 + v$) để kiểm tra visited trong $O(1)$ trung bình.
+
+\subsection{Symbolic Reachability với BDD}
+\label{subsec:bdd}
+
+\textbf{Binary Decision Diagram (BDD)} là cấu trúc dữ liệu biểu diễn hàm Boolean dạng DAG (đồ thị có hướng không chu trình). BDD cho phép nén tập markings hiệu quả vì các trạng thái có cấu trúc tương tự chia sẻ nodes.
+
+\subsubsection{Encoding biến}
+Với $n$ places, sử dụng $2n$ biến Boolean:
+\begin{itemize}
+    \item Biến \textbf{current} (index chẵn): $x_0, x_2, \ldots, x_{2n-2}$ -- trạng thái hiện tại
+    \item Biến \textbf{next} (index lẻ): $x_1, x_3, \ldots, x_{2n-1}$ -- trạng thái kế tiếp
+\end{itemize}
+
+Marking $\marking{M}$ được encode: $\text{encode}(\marking{M}) = \bigwedge_{i=0}^{n-1} (M[p_i]=1 \,?\, x_{2i} : \neg x_{2i})$
+
+\subsubsection{Transition Relation}
+Quan hệ chuyển tiếp $TR(x, x') = \bigvee_{t \in T} TR_t$, với mỗi $TR_t$ encode điều kiện enabled và effect của transition $t$.
+
+\begin{algorithm}[H]
+\caption{BDD Symbolic Reachability (Fixpoint)}
+\label{alg:bdd}
+\begin{algorithmic}[1]
+\Require BDD của $\marking{M}_0$, Transition relation $TR$
+\Ensure BDD biểu diễn $\reach(\marking{M}_0)$
+\State $Reached \gets \text{encode}(\marking{M}_0)$
+\State $New \gets \text{encode}(\marking{M}_0)$
+\While{$New \neq \text{false}$}
+    \State $Next' \gets \exists x.\,(New(x) \wedge TR(x, x'))$ \Comment{Image: \code{bdd\_relprod()}}
+    \State $Next \gets \text{rename}(Next', x' \rightarrow x)$ \Comment{\code{bdd\_replace()}}
+    \State $NewDiff \gets Next \setminus Reached$ \Comment{Các states mới}
+    \State $Reached \gets Reached \cup NewDiff$
+    \State $New \gets NewDiff$
+\EndWhile
+\State \Return $Reached$ \Comment{Đếm bằng \code{bdd\_satcountset()}}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Thư viện BuDDy}: Sử dụng các hàm \code{bdd\_init()}, \code{bdd\_ithvar()}, \code{bdd\_nithvar()}, \code{bdd\_relprod()}, \code{bdd\_replace()}, \code{bdd\_satcountset()}.
+
+\subsection{ILP-based Analysis}
+\label{subsec:ilp}
+
+\textbf{Integer Linear Programming (ILP)} tìm marking thỏa mãn ràng buộc tuyến tính với biến nguyên. Kết hợp với BDD để đảm bảo marking là reachable.
+
+\subsubsection{Task 4: Deadlock Detection}
+Deadlock là marking không có transition nào enabled. Mô hình ILP:
+\begin{align}
+\text{minimize} \quad & \sum_{p \in P} M[p] \\
+\text{subject to} \quad & \sum_{p \in P} \pre[p][t] \cdot M[p] \leq \sum_{p \in P} \pre[p][t] - 1, \quad \forall t \in T \\
+& M[p] \in \{0, 1\}, \quad \forall p \in P
+\end{align}
+
+Ràng buộc (2) đảm bảo với mỗi transition $t$, không đủ token để fire (tổng token ở input places $< $ yêu cầu).
+
+\subsubsection{Task 5: Optimization}
+Maximize hàm mục tiêu tuyến tính: $\max \sum_{p \in P} c_p \cdot M[p]$ với $M[p] \in \{0,1\}$.
+
+\subsubsection{Cutting-Plane Method}
+ILP có thể trả về marking không reachable. Giải quyết bằng phương pháp cutting-plane:
+\begin{enumerate}
+    \item Giải ILP $\rightarrow$ ứng viên $\marking{M}^*$
+    \item Kiểm tra $\marking{M}^* \in \reach(\marking{M}_0)$ bằng BDD (\code{bdd\_check\_reachable})
+    \item Nếu không reachable: thêm cut $\sum_{p: M^*[p]=1} M[p] - \sum_{p: M^*[p]=0} M[p] \leq k-1$ và lặp lại
+\end{enumerate}
+
+\textbf{Thư viện GLPK}: Sử dụng \code{glp\_create\_prob()}, \code{glp\_set\_col\_kind(GLP\_BV)}, \code{glp\_intopt()}.
